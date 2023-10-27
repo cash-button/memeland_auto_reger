@@ -25,6 +25,10 @@ from utils import logger
 from .solve_captcha import SolveCaptcha
 
 
+class TooNew(BaseException):
+    pass
+
+
 class Unauthorized(BaseException):
     pass
 
@@ -196,7 +200,7 @@ class Reger:
         while True:
             r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/invite-code',
                                       json={
-                                          'code': 'capitanz#5056'
+                                          'code': config.REF_CODE
                                       })
 
             if r.json()['status'] == 'verification_failed':
@@ -392,7 +396,7 @@ class Reger:
                         if r.json().get('error', '') == 'account_too_new':
                             logger.error(f'{self.account_token} | Account Too New')
 
-                            continue
+                            return
 
                         if r.json().get('error', '') == 'Unauthorized':
                             raise Unauthorized()
@@ -547,7 +551,20 @@ class Reger:
                                         f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
 
                             case 'goingToBinance':
-                                pass
+                                binance_result, response_text, response_status = await self.binance_task()
+
+                                if binance_result:
+                                    logger.success(f'{self.account_token} | Успешно получил бонус за goingToBinance')
+
+                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                        logger.info(
+                                            f'{self.account_token} | Сплю {config.SLEEP_BETWEEN_TASKS} сек. перед выполнением следующего таска')
+                                        await asyncio.sleep(delay=config.SLEEP_BETWEEN_TASKS)
+
+                                else:
+                                    logger.error(
+                                        f'{self.account_token} | Не удалось получить бонус от Binance, статус: {response_status}, response:\n{response_text}')
 
             except better_automation.twitter.errors.Forbidden as error:
                 if 'This account is suspended.' in await error.response.text():
@@ -563,6 +580,10 @@ class Reger:
                     better_automation.twitter.errors.HTTPException):
                 logger.error(f'{self.account_token} | Unauthorized')
                 continue
+
+            except TooNew:
+                logger.error(f'{self.account_token} | Twitter Account Too New')
+                break
 
             except AccountSuspended as error:
                 async with aiofiles.open('suspended_accounts.txt', 'a', encoding='utf-8-sig') as f:
@@ -586,6 +607,22 @@ class Reger:
                 await f.write(f'{self.account_token}\n')
 
 
+    async def binance_task(self) -> tuple[bool, str, int]:
+        while True:
+            r = self.meme_client.post('https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance', headers={**self.meme_client.headers})
+
+            if r.json()['status'] == 'verification_failed':
+                logger.info(f'{self.account_token} | Verification Failed, пробую еще раз')
+                sleep(5)
+                continue
+
+            elif r.json()['status'] == 401 and r.json().get('error') and r.json()['error'] == 'unauthorized':
+                raise Unauthorized()
+
+            return r.json()['status'] == 'success', r.text, r.status_code
+
+
+
 def start_reger_wrapper(source_data: dict) -> None:
     try:
         if config.CHANGE_PROXY_URL:
@@ -601,3 +638,4 @@ def start_reger_wrapper(source_data: dict) -> None:
 
     except Exception as error:
         logger.error(f'{source_data["account_token"]} | Неизвестная ошибка: {error}')
+
