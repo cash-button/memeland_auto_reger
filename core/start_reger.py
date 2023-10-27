@@ -196,7 +196,7 @@ class Reger:
         while True:
             r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/invite-code',
                                       json={
-                                          'code': 'potatoz#5052'
+                                          'code': 'capitanz#5056'
                                       })
 
             if r.json()['status'] == 'verification_failed':
@@ -212,7 +212,7 @@ class Reger:
     async def follow_quest(self,
                            username: str,
                            follow_id: str):
-        await self.twitter_client.follow(user_id=await self.twitter_client.request_user_id(username=username))
+        # await self.twitter_client.follow(user_id=await self.twitter_client.request_user_id(username=username)) # dont need it
 
         r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/twitter-follow',
                                   json={
@@ -545,6 +545,9 @@ class Reger:
                                 else:
                                     logger.error(
                                         f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
+
+                            case 'goingToBinance':
+                                pass
 
             except better_automation.twitter.errors.Forbidden as error:
                 if 'This account is suspended.' in await error.response.text():
