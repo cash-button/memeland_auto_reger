@@ -609,7 +609,10 @@ class Reger:
 
     async def binance_task(self) -> tuple[bool, str, int]:
         while True:
-            r = self.meme_client.post('https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance', headers={**self.meme_client.headers})
+            r = self.meme_client.post('https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance', headers={
+                                          **self.meme_client.headers,
+                                          'content-type': ''
+                                      })
 
             if r.json()['status'] == 'verification_failed':
                 logger.info(f'{self.account_token} | Verification Failed, пробую еще раз')
