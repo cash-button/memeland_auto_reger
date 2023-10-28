@@ -53,6 +53,26 @@ class StartSubs:
             else:
                 return account_username
 
+
+    async def get_subscribers_count(self, username: str) -> int:
+        while True:
+            try:
+                user_id = await self.twitter_client.request_user_id(username)
+                followers = len(await self.twitter_client.request_followers(user_id, count=self.subs_count))
+                return followers
+
+            except better_automation.twitter.errors.Forbidden as error:
+                if 326 in error.api_codes:
+                    logger.info(f'{self.target_account_token} | Обнаружена капча на аккаунте, пробую решить')
+
+                    SolveCaptcha(auth_token=self.twitter_client.auth_token,
+                                 ct0=self.twitter_client.ct0).solve_captcha(
+                        proxy=Proxy.from_str(
+                            proxy=self.current_account_proxy).as_url if self.current_account_proxy else None)
+                    continue
+
+                raise better_automation.twitter.errors.Forbidden(error.response)
+
     async def subscribe_account(self,
                                 target_username: str) -> None:
         i: int = 0
@@ -154,6 +174,10 @@ class StartSubs:
                 self.twitter_client.set_ct0(await self.twitter_client._request_ct0())
 
             account_username: str = await self.get_account_username()
+            subs_count = await self.get_subscribers_count(username=account_username)
+            if subs_count >= self.subs_count:
+                logger.success(f'{account_username} уже имеет {self.subs_count}+ подписчиков!')
+                return True
 
         await self.subscribe_account(target_username=account_username)
 
