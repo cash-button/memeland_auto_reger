@@ -1,10 +1,11 @@
-import asyncio
-import itertools
-from copy import deepcopy
 from multiprocessing.dummy import Pool
+from warnings import filterwarnings
 from random import randint
-from sys import exit
+from copy import deepcopy
 from sys import platform
+from sys import exit
+import itertools
+import asyncio
 
 import config
 from core import start_reger_wrapper
@@ -15,6 +16,8 @@ if platform == "windows":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if __name__ == '__main__':
+
+    filterwarnings("ignore")
 
     with open('accounts.txt', 'r', encoding='utf-8-sig') as file:
         accounts_list: list[str] = [validate_token(input_string=row.strip()) for row in file]
