@@ -4,7 +4,8 @@ from random import randint
 
 def format_range(value: str | int,
                  return_randint: bool = False) -> tuple[int, int] | int:
-    if value.isdigit():
+    if type(value) == int: return value 
+    elif str(value).isdigit():
         return randint(a=int(value),
                        b=int(value)) if return_randint else int(value), int(value)
 
