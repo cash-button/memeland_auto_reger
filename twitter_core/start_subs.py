@@ -141,10 +141,12 @@ class StartSubs:
                             else:
                                 logger.error(f'{temp_twitter_client.auth_token} | Не удалось подписаться на '
                                              f'{target_username}: {error}')
+                                if 'Too Many Requests' in str(error): sleep(10)
 
                         except Exception as error:
                             logger.error(f'{temp_twitter_client.auth_token} | Не удалось подписаться на '
                                          f'{target_username}: {error}')
+                            if 'Too Many Requests' in str(error): sleep(10)
 
                         else:
                             logger.success(
