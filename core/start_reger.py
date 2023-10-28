@@ -514,7 +514,7 @@ class Reger:
                                     task_name='Meme')
 
                                     if share_message_result:
-                                        logger.success(f'{self.account_token} | Успешно получил бонус за твит')
+                                        logger.success(f'{self.account_token} | Успешно получил бонус за твит Meme')
 
                                         if config.SLEEP_BETWEEN_TASKS and current_task != \
                                                 (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
@@ -580,11 +580,11 @@ class Reger:
                                                       ' Come join the farming with your fellow Binancians!\n\n👇 '
                                                       'https://www.binance.com/en/support/announcement/'
                                                       '90ccca2c5d6946ef9439dae41a517578',
-                                        verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance', task_name='binance')
+                                        verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance', task_name='Binance')
 
                                     if share_message_result:
                                         logger.success(
-                                            f'{self.account_token} | Успешно получил бонус за твит goingToBinance')
+                                            f'{self.account_token} | Успешно получил бонус за твит Binance')
 
                                         if config.SLEEP_BETWEEN_TASKS and current_task != \
                                                 (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
@@ -648,7 +648,7 @@ class Reger:
 
         logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
         async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
-            await f.write(f'{self.account_token}\n{self.account_private_key}:{points}')
+            await f.write(f'{self.account_token}:{self.account_private_key}:{points}\n')
 
 
 
