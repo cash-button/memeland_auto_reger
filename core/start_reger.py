@@ -76,8 +76,8 @@ class Reger:
                                       })
 
             if r.json()['status'] == 'verification_failed':
-                logger.info(f'{self.account_token} | Verification Failed, пробую еще раз')
-                sleep(5)
+                logger.info(f'{self.account_token} | Link Wallet Verification Failed, пробую еще раз')
+                sleep(15)
                 continue
 
             elif r.json()['status'] == 401 and r.json().get('error') and r.json()['error'] == 'unauthorized':
@@ -127,13 +127,13 @@ class Reger:
 
     async def twitter_name(self,
                            twitter_account_name: str) -> tuple[bool, str, int]:
-        # if '❤️ Memecoin' not in twitter_account_name:
-        #     change_twitter_name_result, response_text, response_status = await self.change_twitter_name(
-        #         twitter_account_name=twitter_account_name)
-        #
-        #     if not change_twitter_name_result:
-        #         logger.error(f'{self.account_token} | Не удалось изменить имя пользователя')
-        #         return False, response_text, response_status
+        if '❤️ Memecoin' not in twitter_account_name:
+            change_twitter_name_result, response_text, response_status = await self.change_twitter_name(
+                twitter_account_name=twitter_account_name)
+
+            if not change_twitter_name_result:
+                logger.error(f'{self.account_token} | Не удалось изменить имя пользователя')
+                return False, response_text, response_status
 
         while True:
             r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/twitter-name',
@@ -143,8 +143,8 @@ class Reger:
                                       })
 
             if r.json()['status'] == 'verification_failed':
-                logger.info(f'{self.account_token} | Verification Failed, пробую еще раз')
-                sleep(5)
+                logger.info(f'{self.account_token} | Change Twitter Name Verification Failed, пробую еще раз')
+                sleep(15)
                 continue
 
             elif r.json()['status'] == 401 and r.json().get('error') and r.json()['error'] == 'unauthorized':
@@ -161,7 +161,8 @@ class Reger:
 
     async def share_message(self,
                             share_message: str,
-                            verify_url: str) -> tuple[bool, str, int]:
+                            verify_url: str,
+                            task_name: str) -> tuple[bool, str, int]:
         # try:
         #         create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
         #
@@ -184,8 +185,8 @@ class Reger:
                                       })
 
             if r.json()['status'] == 'verification_failed':
-                logger.info(f'{self.account_token} | Verification Failed, пробую еще раз')
-                sleep(5)
+                logger.info(f'{self.account_token} | {task_name.title()} Tweet Verification Failed, пробую еще раз')
+                sleep(15)
                 continue
 
             elif r.json()['status'] == 401 and r.json().get('error') and r.json()['error'] == 'unauthorized':
@@ -201,8 +202,8 @@ class Reger:
                                       })
 
             if r.json()['status'] == 'verification_failed':
-                logger.info(f'{self.account_token} | Verification Failed, пробую еще раз')
-                sleep(5)
+                logger.info(f'{self.account_token} | Referral Verification Failed, пробую еще раз')
+                sleep(15)
                 continue
 
             elif r.json()['status'] == 401 and r.json().get('error') and r.json()['error'] == 'unauthorized':
@@ -508,7 +509,8 @@ class Reger:
                                                       'at @Memeland.\n\nOn my honor, I promise that I will do my best '
                                                       'to do my duty to my own bag, and to farm #MEMEPOINTS at '
                                                       'all times.\n\nIt ain’t much, but it’s honest work. 🧑‍🌾 ',
-                                        verify_url='https://memefarm-api.memecoin.org/user/verify/share-message')
+                                        verify_url='https://memefarm-api.memecoin.org/user/verify/share-message',
+                                    task_name='Meme')
 
                                     if share_message_result:
                                         logger.success(f'{self.account_token} | Успешно получил бонус за твит')
@@ -577,7 +579,7 @@ class Reger:
                                                       ' Come join the farming with your fellow Binancians!\n\n👇 '
                                                       'https://www.binance.com/en/support/announcement/'
                                                       '90ccca2c5d6946ef9439dae41a517578',
-                                        verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance')
+                                        verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance', task_name='binance')
 
                                     if share_message_result:
                                         logger.success(
