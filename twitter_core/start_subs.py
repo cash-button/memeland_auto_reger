@@ -1,4 +1,5 @@
 import asyncio
+from time import sleep
 from copy import deepcopy
 from random import randint
 from sys import platform
@@ -130,9 +131,13 @@ class StartSubs:
                                 f'| {i + 1}/{self.subs_count}')
                             i += 1
                             break
+                    sleep(randint(5, 15))
 
             except Exception as error:
                 logger.error(f'{random_token} | Неизвестная ошибка при подписке на {target_username}: {error} ')
+
+        # logger.debug(f'')
+        sleep(randint(10, 15))
 
     async def start_subs(self):
         self.current_account_proxy: str | None = next(self.proxies_list) if self.proxies_list else None
