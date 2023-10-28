@@ -64,6 +64,7 @@ class SolveCaptcha:
 
     def solve_captcha(self,
                       proxy: str | None) -> None:
+        driver = None
         try:
             captcha_result: str = ''
 
@@ -189,3 +190,6 @@ class SolveCaptcha:
 
         except Exception as error:
             logger.error(f'{self.auth_token} | Неизвестная ошибка при попытке разморозить аккаунт: {error}')
+
+        finally:
+            if driver: driver.close()
