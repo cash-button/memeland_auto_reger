@@ -42,6 +42,7 @@ class Reger:
         self.twitter_client: better_automation.twitter.api.TwitterAPI | None = None
         self.meme_client: tls_client.sessions.Session | None = None
         self.account_too_new_attempts: int = 0
+        self.account_unauthorized: int = 0
 
 
     def get_tasks(self) -> dict:
@@ -568,7 +569,7 @@ class Reger:
 
                                     else:
                                         logger.error(
-                                            f'{self.account_token} | Не удалось одписаться на '
+                                            f'{self.account_token} | Не удалось подписаться на '
                                             f'{current_task["id"].replace("follow", "")}: {response_text}')
 
                                 case 'goingToBinance':
@@ -614,7 +615,9 @@ class Reger:
             except (Unauthorized, better_automation.twitter.errors.Unauthorized,
                     better_automation.twitter.errors.HTTPException):
                 logger.error(f'{self.account_token} | Unauthorized')
-                return False
+                self.account_unauthorized += 1
+                if self.account_unauthorized >= config.ACCOUNT_UNAUTHORIZED_ATTEMPTS:
+                    return False
 
             except AccountSuspended as error:
                 async with aiofiles.open('suspended_accounts.txt', 'a', encoding='utf-8-sig') as f:
