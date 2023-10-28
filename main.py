@@ -15,7 +15,6 @@ if platform == "windows":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if __name__ == '__main__':
-    print('Donate (any EVM) - 0xDEADf12DE9A24b47Da0a43E1bA70B8972F5296F2\n')
 
     with open('accounts.txt', 'r', encoding='utf-8-sig') as file:
         accounts_list: list[str] = [validate_token(input_string=row.strip()) for row in file]
@@ -36,19 +35,21 @@ if __name__ == '__main__':
 
     user_action: int = int(input('\n1. Запуск накрутки MEMELand\n'
                                  '2. Подписка между аккаунтами Twitter\n'
-                                 'Введите ваше действие: '))
+                                 '3. Проверка Twitter аккаунтов в MEME\n'
+                                 '\n\tВведите ваше действие: '))
 
-    threads: int = 1 if config.CHANGE_PROXY_URL else int(input('Threads: '))
+    threads: int = 1 if config.CHANGE_PROXY_URL else int(input('\tThreads: '))
 
     match user_action:
-        case 1:
+        case 1 | 3:
             print()
 
             formatted_accounts_list: list = [
                 {
                     'account_token': current_account,
                     'account_proxy': next(cycled_proxies_list) if cycled_proxies_list else None,
-                    'account_private_key': private_keys_list.pop(0) if private_keys_list else None
+                    'account_private_key': private_keys_list.pop(0) if private_keys_list else None,
+                    'user_action': user_action
                 } for current_account in accounts_list
             ]
 

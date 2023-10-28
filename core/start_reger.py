@@ -37,6 +37,7 @@ class Reger:
         self.account_token: str = source_data['account_token']
         self.account_proxy: str | None = source_data['account_proxy']
         self.account_private_key: str | None = source_data['account_private_key']
+        self.user_action: int = source_data['user_action']
 
         self.twitter_client: better_automation.twitter.api.TwitterAPI | None = None
         self.meme_client: tls_client.sessions.Session | None = None
@@ -245,7 +246,7 @@ class Reger:
                                                           headers=headers)
 
                 except better_automation.twitter.errors.BadRequest as error:
-                    logger.error(f'{self.account_token} | BadRequest: {error}, пробую еще раз')
+                    logger.warning(f'{self.account_token} | BadRequest: {error}, пробую еще раз')
 
                 else:
                     break
@@ -273,7 +274,7 @@ class Reger:
             })
 
             if not auth_token_html or not oauth_token_html:
-                logger.error(f'{self.account_token} | Не удалось обнаружить Auth/OAuth Token на странице, '
+                logger.warning(f'{self.account_token} | Не удалось обнаружить Auth/OAuth Token на странице, '
                              f'пробую еще раз, статус: {r[0].status}')
                 continue
 
@@ -354,7 +355,7 @@ class Reger:
                     if parse_qs(urlparse(location).query).get('redirect_after_login') \
                             or not parse_qs(urlparse(location).query).get('oauth_token') \
                             or not parse_qs(urlparse(location).query).get('oauth_verifier'):
-                        logger.error(
+                        logger.warning(
                             f'{self.account_token} | Не удалось обнаружить OAuth Token / OAuth Verifier в '
                             f'ссылке: {location}')
                         continue
@@ -398,7 +399,7 @@ class Reger:
                         if r.json().get('error', '') == 'account_too_new':
                             self.account_too_new_attempts += 1
                             if self.account_too_new_attempts != config.ACCOUNT_TOO_NEW_ATTEMPTS:
-                                logger.error(f'{self.account_token} | Account Too New')
+                                logger.warning(f'{self.account_token} | Account Too New')
                             continue
 
                         if r.json().get('error', '') == 'Unauthorized':
@@ -407,7 +408,7 @@ class Reger:
                         access_token: str = r.json().get('accessToken', '')
 
                         if not access_token:
-                            logger.error(
+                            logger.warning(
                                 f'{self.account_token} | Не удалось обнаружить Access Token в ответе, пробую еще раз, '
                                 f'статус: {r.status_code}')
                             continue
@@ -415,12 +416,18 @@ class Reger:
                         break
 
                     else:
-                        logger.error(f'{self.account_token} | Account Too New Empty Attempts')
+                        logger.error(f'{self.account_token} | Account Too New') # out of attemepts
 
                         async with aiofiles.open('account_too_new.txt', 'a', encoding='utf-8-sig') as f:
                             await f.write(f'{self.account_token}\n')
 
                         return False
+
+                    if self.user_action == 3:
+                        logger.success(f'{self.account_token} | Token Valid')
+                        async with aiofiles.open('result/stat_working_twitters.txt', mode='a+', encoding='utf-8-sig') as f:
+                            await f.write(f'{self.account_token}\n')
+                        return True
 
                     self.meme_client.headers.update({
                         'authorization': f'Bearer {access_token}'
@@ -604,7 +611,7 @@ class Reger:
             except (Unauthorized, better_automation.twitter.errors.Unauthorized,
                     better_automation.twitter.errors.HTTPException):
                 logger.error(f'{self.account_token} | Unauthorized')
-                continue
+                return False
 
             except AccountSuspended as error:
                 async with aiofiles.open('suspended_accounts.txt', 'a', encoding='utf-8-sig') as f:
@@ -614,9 +621,8 @@ class Reger:
                 return False
 
             except Exception as error:
-                logger.error(f'{self.account_token} | Неизвестная ошибка при обработке аккаунта: {error}')
-
-                return False
+                logger.error(f'{self.account_token} | Неизвестная ошибка, пробую еще раз: {error}')
+                continue
 
             else:
                 return True
