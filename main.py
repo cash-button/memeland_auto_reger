@@ -10,7 +10,7 @@ import asyncio
 import config
 from core import start_reger_wrapper
 from twitter_core import start_subs
-from utils import format_range, logger, validate_token
+from utils import format_range, logger, validate_token, windowname
 
 if platform == "windows":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -30,6 +30,8 @@ if __name__ == '__main__':
     with open('private_keys.txt', 'r', encoding='utf-8-sig') as file:
         private_keys_list: list[str] = [f'0x{row.strip()}' if not row.strip().startswith('0x') else row.strip() for row
                                         in file]
+
+    window_name = windowname.WindowName(accs_amount=max(len(accounts_list), len(private_keys_list)))
 
     cycled_proxies_list = itertools.cycle(proxies_list) if proxies_list else None
 
@@ -52,7 +54,8 @@ if __name__ == '__main__':
                     'account_token': current_account,
                     'account_proxy': next(cycled_proxies_list) if cycled_proxies_list else None,
                     'account_private_key': private_keys_list.pop(0) if private_keys_list else None,
-                    'user_action': user_action
+                    'user_action': user_action,
+                    'window_name': window_name
                 } for current_account in accounts_list
             ]
 
@@ -65,7 +68,7 @@ if __name__ == '__main__':
             logger.info(f'Статистика работы: {success_count} SUCCESS | {fail_count} FAILED')
 
         case 2:
-            subs_range: str = input('Введите диапазон необходимого количества подписок (ex: 3-5, 4-10, 5, 10): ')
+            subs_range: str = input('\tВведите диапазон необходимого количества подписок (ex: 3-5, 4-10, 5, 10): ')
 
             first_int_subs_range, second_int_subs_range = format_range(value=subs_range)
 

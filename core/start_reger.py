@@ -27,13 +27,13 @@ from utils import get_connector
 from utils import logger
 from .solve_captcha import SolveCaptcha
 
-if platform == "windows":
+if platform in ["windows", "win32"]:
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class Reger:
-    def __init__(self,
-                 source_data: dict) -> None:
+    def __init__(self, source_data: dict) -> None:
+        source_data['window_name'].update_accs()
         self.account_token: str = source_data['account_token']
         self.account_proxy: str | None = source_data['account_proxy']
         self.account_private_key: str | None = source_data['account_private_key']
@@ -42,6 +42,7 @@ class Reger:
         self.twitter_client: better_automation.twitter.api.TwitterAPI | None = None
         self.meme_client: tls_client.sessions.Session | None = None
         self.account_too_new_attempts: int = 0
+
 
     def get_tasks(self) -> dict:
         r = self.meme_client.get(url='https://memefarm-api.memecoin.org/user/tasks',
