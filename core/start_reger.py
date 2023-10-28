@@ -161,20 +161,20 @@ class Reger:
     async def share_message(self,
                             share_message: str,
                             verify_url: str) -> tuple[bool, str, int]:
-        try:
-            if '$MEME (@MEMECOIN) IS GOING TO @BINANCE!' not in share_message:
-                create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
+        if '$MEME (@MEMECOIN) IS GOING TO @BINANCE!' not in share_message:
+            try:
+                    create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
 
-        except better_automation.twitter.errors.HTTPException as error:
-            if 187 in error.api_codes:
-                pass
+            except better_automation.twitter.errors.HTTPException as error:
+                if 187 in error.api_codes:
+                    pass
+
+                else:
+                    raise better_automation.twitter.errors.HTTPException(error.response)
 
             else:
-                raise better_automation.twitter.errors.HTTPException(error.response)
-
-        else:
-            if not create_tweet_status:
-                return False, tweet_id, 0
+                if not create_tweet_status:
+                    return False, tweet_id, 0
 
         while True:
             r = self.meme_client.post(url=verify_url,
