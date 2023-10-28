@@ -142,11 +142,13 @@ class StartSubs:
                                 logger.error(f'{temp_twitter_client.auth_token} | Не удалось подписаться на '
                                              f'{target_username}: {error}')
                                 if 'Too Many Requests' in str(error): sleep(10)
+                                elif 'this account is temporarily locked' in str(error): return False
 
                         except Exception as error:
                             logger.error(f'{temp_twitter_client.auth_token} | Не удалось подписаться на '
                                          f'{target_username}: {error}')
                             if 'Too Many Requests' in str(error): sleep(10)
+                            elif 'this account is temporarily locked' in str(error): return False
 
                         else:
                             logger.success(
