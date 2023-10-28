@@ -87,7 +87,8 @@ if __name__ == '__main__':
                     'target_account_token': current_account,
                     'accounts_list': deepcopy(accounts_list),
                     'proxies_list': cycled_proxies_list,
-                    'subs_count': randint(first_int_subs_range, second_int_subs_range)
+                    'subs_count': randint(first_int_subs_range, second_int_subs_range),
+                    'window_name': window_name
                 } for current_account in accounts_list
             ]
 

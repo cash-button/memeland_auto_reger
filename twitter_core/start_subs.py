@@ -23,6 +23,7 @@ class StartSubs:
                  account_data: dict):
         self.twitter_client: better_automation.twitter.api.TwitterAPI | None = None
 
+        account_data['window_name'].update_accs()
         self.target_account_token: str = account_data['target_account_token']
         self.account_list: list = account_data['accounts_list']
         self.proxies_list = account_data['proxies_list']
