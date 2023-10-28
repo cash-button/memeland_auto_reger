@@ -166,7 +166,8 @@ class Reger:
                             share_message: str,
                             verify_url: str) -> tuple[bool, str, int]:
         try:
-            create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
+            if '$MEME (@MEMECOIN) IS GOING TO @BINANCE!' not in share_message:
+                create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
 
         except better_automation.twitter.errors.HTTPException as error:
             if 187 in error.api_codes:
