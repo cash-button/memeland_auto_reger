@@ -127,13 +127,13 @@ class Reger:
 
     async def twitter_name(self,
                            twitter_account_name: str) -> tuple[bool, str, int]:
-        if '❤️ Memecoin' not in twitter_account_name:
-            change_twitter_name_result, response_text, response_status = await self.change_twitter_name(
-                twitter_account_name=twitter_account_name)
-
-            if not change_twitter_name_result:
-                logger.error(f'{self.account_token} | Не удалось изменить имя пользователя')
-                return False, response_text, response_status
+        # if '❤️ Memecoin' not in twitter_account_name:
+        #     change_twitter_name_result, response_text, response_status = await self.change_twitter_name(
+        #         twitter_account_name=twitter_account_name)
+        #
+        #     if not change_twitter_name_result:
+        #         logger.error(f'{self.account_token} | Не удалось изменить имя пользователя')
+        #         return False, response_text, response_status
 
         while True:
             r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/twitter-name',
@@ -162,20 +162,19 @@ class Reger:
     async def share_message(self,
                             share_message: str,
                             verify_url: str) -> tuple[bool, str, int]:
-        if '$MEME (@MEMECOIN) IS GOING TO @BINANCE!' not in share_message:
-            try:
-                    create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
-
-            except better_automation.twitter.errors.HTTPException as error:
-                if 187 in error.api_codes:
-                    pass
-
-                else:
-                    raise better_automation.twitter.errors.HTTPException(error.response)
-
-            else:
-                if not create_tweet_status:
-                    return False, tweet_id, 0
+        # try:
+        #         create_tweet_status, tweet_id = await self.create_tweet(share_message=share_message)
+        #
+        # except better_automation.twitter.errors.HTTPException as error:
+        #     if 187 in error.api_codes:
+        #         pass
+        #
+        #     else:
+        #         raise better_automation.twitter.errors.HTTPException(error.response)
+        #
+        # else:
+        #     if not create_tweet_status:
+        #         return False, tweet_id, 0
 
         while True:
             r = self.meme_client.post(url=verify_url,
