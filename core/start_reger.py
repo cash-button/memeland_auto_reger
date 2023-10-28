@@ -444,159 +444,160 @@ class Reger:
                     twitter_username, twitter_account_name = self.get_twitter_account_names()
                     all_tasks: list = tasks_dict['tasks'] + tasks_dict['timely']
 
-                    if len(all_tasks) - sum([current_task['completed'] for current_task in all_tasks]) == 0:
-                        logger.info(f'{self.account_token} | Все задания успешно выполнены')
-                        return True
+                    if len(all_tasks) - sum([current_task['completed'] for current_task in all_tasks]) != 0:
 
-                    for current_task in tasks_dict['tasks'] + tasks_dict['timely']:
-                        if current_task['completed']:
-                            continue
-
-                        match current_task['id']:
-                            case 'connect':
+                        for current_task in tasks_dict['tasks'] + tasks_dict['timely']:
+                            if current_task['completed']:
                                 continue
 
-                            case 'linkWallet':
-                                link_wallet_result, response_text, response_status = self.link_wallet(account=account,
-                                                                                                      twitter_username=twitter_username)
+                            match current_task['id']:
+                                case 'connect':
+                                    continue
 
-                                if link_wallet_result:
-                                    logger.success(f'{self.account_token} | Успешно привязал кошелек')
+                                case 'linkWallet':
+                                    link_wallet_result, response_text, response_status = self.link_wallet(account=account,
+                                                                                                          twitter_username=twitter_username)
 
-                                    async with aiofiles.open(file='registered.txt', mode='a',
-                                                             encoding='utf-8-sig') as f:
-                                        await f.write(
-                                            f'{self.account_token};{self.account_proxy if self.account_proxy else ""};'
-                                            f'{account.key.hex()}\n')
+                                    if link_wallet_result:
+                                        logger.success(f'{self.account_token} | Успешно привязал кошелек')
 
-                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                        time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                          return_randint=True)
-                                        logger.info(
-                                            f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                            f'выполнением следующего таска')
-                                        await asyncio.sleep(delay=time_to_sleep)
+                                        async with aiofiles.open(file='registered.txt', mode='a',
+                                                                 encoding='utf-8-sig') as f:
+                                            await f.write(
+                                                f'{self.account_token};{self.account_proxy if self.account_proxy else ""};'
+                                                f'{account.key.hex()}\n')
 
-                                else:
-                                    logger.error(
-                                        f'{self.account_token} | Не удалось привязать кошелек, статус: {response_status}')
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
 
-                            case 'twitterName':
-                                twitter_username_result, response_text, response_status = await self.twitter_name(
-                                    twitter_account_name=twitter_account_name)
+                                    else:
+                                        logger.error(
+                                            f'{self.account_token} | Не удалось привязать кошелек, статус: {response_status}')
 
-                                if twitter_username_result:
-                                    logger.success(
-                                        f'{self.account_token} | Успешно получил бонус за MEMELAND в никнейме')
+                                case 'twitterName':
+                                    twitter_username_result, response_text, response_status = await self.twitter_name(
+                                        twitter_account_name=twitter_account_name)
 
-                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                        time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                          return_randint=True)
-                                        logger.info(
-                                            f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                            f'выполнением следующего таска')
-                                        await asyncio.sleep(delay=time_to_sleep)
+                                    if twitter_username_result:
+                                        logger.success(
+                                            f'{self.account_token} | Успешно получил бонус за MEMELAND в никнейме')
 
-                                else:
-                                    logger.error(f'{self.account_token} | Не удалось получить бонус за MEMELAND в '
-                                                 f'никнейме, статус: {response_status}')
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
 
-                            case 'shareMessage':
-                                share_message_result, response_text, response_status = await self.share_message(
-                                    share_message=f'Hi, my name is @{twitter_username}, and I’m a $MEME (@Memecoin) '
-                                                  f'farmer'
-                                                  'at @Memeland.\n\nOn my honor, I promise that I will do my best '
-                                                  'to do my duty to my own bag, and to farm #MEMEPOINTS at '
-                                                  'all times.\n\nIt ain’t much, but it’s honest work. 🧑‍🌾 ',
-                                    verify_url='https://memefarm-api.memecoin.org/user/verify/share-message')
+                                    else:
+                                        logger.error(f'{self.account_token} | Не удалось получить бонус за MEMELAND в '
+                                                     f'никнейме, статус: {response_status}')
 
-                                if share_message_result:
-                                    logger.success(f'{self.account_token} | Успешно получил бонус за твит')
+                                case 'shareMessage':
+                                    share_message_result, response_text, response_status = await self.share_message(
+                                        share_message=f'Hi, my name is @{twitter_username}, and I’m a $MEME (@Memecoin) '
+                                                      f'farmer'
+                                                      'at @Memeland.\n\nOn my honor, I promise that I will do my best '
+                                                      'to do my duty to my own bag, and to farm #MEMEPOINTS at '
+                                                      'all times.\n\nIt ain’t much, but it’s honest work. 🧑‍🌾 ',
+                                        verify_url='https://memefarm-api.memecoin.org/user/verify/share-message')
 
-                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                        time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                          return_randint=True)
-                                        logger.info(
-                                            f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                            f'выполнением следующего таска')
-                                        await asyncio.sleep(delay=time_to_sleep)
+                                    if share_message_result:
+                                        logger.success(f'{self.account_token} | Успешно получил бонус за твит')
 
-                                else:
-                                    logger.error(
-                                        f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
 
-                            case 'inviteCode':
-                                invite_code_result, response_text = self.invite_code()
+                                    else:
+                                        logger.error(
+                                            f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
 
-                                if invite_code_result:
-                                    logger.success(f'{self.account_token} | Успешно ввел реф.код')
+                                case 'inviteCode':
+                                    invite_code_result, response_text = self.invite_code()
 
-                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                        time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                          return_randint=True)
-                                        logger.info(
-                                            f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                            f'выполнением следующего таска')
-                                        await asyncio.sleep(delay=time_to_sleep)
+                                    if invite_code_result:
+                                        logger.success(f'{self.account_token} | Успешно ввел реф.код')
 
-                                else:
-                                    logger.error(
-                                        f'{self.account_token} | Не удалось ввести реф.код, статус: {r.status_code}')
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
 
-                            case 'followMemeland' | 'followMemecoin' | 'follow9gagceo' | 'followGMShowofficial':
-                                follow_result, response_text = await self.follow_quest(
-                                    username=current_task['id'].replace('follow', ''),
-                                    follow_id=current_task['id'])
+                                    else:
+                                        logger.error(
+                                            f'{self.account_token} | Не удалось ввести реф.код, статус: {r.status_code}')
 
-                                if follow_result:
-                                    logger.success(
-                                        f'{self.account_token} | Успешно подписался на '
-                                        f'{current_task["id"].replace("follow", "")}')
+                                case 'followMemeland' | 'followMemecoin' | 'follow9gagceo' | 'followGMShowofficial':
+                                    follow_result, response_text = await self.follow_quest(
+                                        username=current_task['id'].replace('follow', ''),
+                                        follow_id=current_task['id'])
 
-                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                        time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                          return_randint=True)
-                                        logger.info(
-                                            f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                            f'выполнением следующего таска')
-                                        await asyncio.sleep(delay=time_to_sleep)
+                                    if follow_result:
+                                        logger.success(
+                                            f'{self.account_token} | Успешно подписался на '
+                                            f'{current_task["id"].replace("follow", "")}')
 
-                                else:
-                                    logger.error(
-                                        f'{self.account_token} | Не удалось одписаться на '
-                                        f'{current_task["id"].replace("follow", "")}: {response_text}')
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
 
-                            case 'goingToBinance':
-                                share_message_result, response_text, response_status = await self.share_message(
-                                    share_message='AHOY! $MEME (@MEMECOIN) IS GOING TO @BINANCE! 🙌\n\nThis is not a '
-                                                  'drill! This is not fake news! This is happening!\n\n$MEME is the '
-                                                  '39th (not 69th) project on Binance Launchpool! You only have 7 days!'
-                                                  ' Come join the farming with your fellow Binancians!\n\n👇 '
-                                                  'https://www.binance.com/en/support/announcement/'
-                                                  '90ccca2c5d6946ef9439dae41a517578',
-                                    verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance')
+                                    else:
+                                        logger.error(
+                                            f'{self.account_token} | Не удалось одписаться на '
+                                            f'{current_task["id"].replace("follow", "")}: {response_text}')
 
-                                if share_message_result:
-                                    logger.success(
-                                        f'{self.account_token} | Успешно получил бонус за твит goingToBinance')
+                                case 'goingToBinance':
+                                    share_message_result, response_text, response_status = await self.share_message(
+                                        share_message='AHOY! $MEME (@MEMECOIN) IS GOING TO @BINANCE! 🙌\n\nThis is not a '
+                                                      'drill! This is not fake news! This is happening!\n\n$MEME is the '
+                                                      '39th (not 69th) project on Binance Launchpool! You only have 7 days!'
+                                                      ' Come join the farming with your fellow Binancians!\n\n👇 '
+                                                      'https://www.binance.com/en/support/announcement/'
+                                                      '90ccca2c5d6946ef9439dae41a517578',
+                                        verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/goingToBinance')
 
-                                    if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                            (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                        time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                          return_randint=True)
-                                        logger.info(
-                                            f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                            f'выполнением следующего таска')
-                                        await asyncio.sleep(delay=time_to_sleep)
+                                    if share_message_result:
+                                        logger.success(
+                                            f'{self.account_token} | Успешно получил бонус за твит goingToBinance')
 
-                                else:
-                                    logger.error(
-                                        f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
+
+                                    else:
+                                        logger.error(
+                                            f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
+
+                    await self.all_tasks_done()
+                    return True
 
             except better_automation.twitter.errors.Forbidden as error:
                 if 'This account is suspended.' in await error.response.text():
@@ -634,6 +635,16 @@ class Reger:
                 await f.write(f'{self.account_token}\n')
 
             return False
+
+
+    async def all_tasks_done(self):
+        tasks_dict = self.get_tasks()
+        points = tasks_dict['points']['current']
+
+        logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
+        async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
+            await f.write(f'{self.account_token}\n{self.account_private_key}:{points}')
+
 
 
 def start_reger_wrapper(source_data: dict) -> bool:
