@@ -396,8 +396,9 @@ class Reger:
                                                   })
 
                         if r.json().get('error', '') == 'account_too_new':
-                            logger.error(f'{self.account_token} | Account Too New')
-
+                            self.account_too_new_attempts += 1
+                            if self.account_too_new_attempts != config.ACCOUNT_TOO_NEW_ATTEMPTS:
+                                logger.error(f'{self.account_token} | Account Too New')
                             continue
 
                         if r.json().get('error', '') == 'Unauthorized':
