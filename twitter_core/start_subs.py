@@ -5,6 +5,7 @@ from random import randint
 from sys import platform
 
 import aiohttp
+import aiofiles
 import better_automation.twitter.api
 import better_automation.twitter.errors
 from better_automation import TwitterAPI
@@ -143,12 +144,14 @@ class StartSubs:
                                              f'{target_username}: {error}')
                                 if 'Too Many Requests' in str(error): sleep(10)
                                 elif 'this account is temporarily locked' in str(error): return False
+                                elif 'Unauthorized' in str(error): return False
 
                         except Exception as error:
                             logger.error(f'{temp_twitter_client.auth_token} | Не удалось подписаться на '
                                          f'{target_username}: {error}')
                             if 'Too Many Requests' in str(error): sleep(10)
                             elif 'this account is temporarily locked' in str(error): return False
+                            elif 'Unauthorized' in str(error): return False
 
                         else:
                             logger.success(
@@ -160,6 +163,9 @@ class StartSubs:
 
             except Exception as error:
                 logger.error(f'{random_token} | Неизвестная ошибка при подписке на {target_username}: {error} ')
+
+        async with aiofiles.open('result/twitter_success_subs.txt', 'a', encoding='utf-8-sig') as f:
+            await f.write(f'{self.twitter_client.auth_token}:{target_username}\n')
 
         # logger.debug(f'')
         sleep(randint(10, 15))
@@ -182,6 +188,8 @@ class StartSubs:
             subs_count = await self.get_subscribers_count(username=account_username)
             if subs_count >= self.subs_count:
                 logger.success(f'{account_username} уже имеет {self.subs_count}+ подписчиков!')
+                async with aiofiles.open('result/twitter_success_subs.txt', 'a', encoding='utf-8-sig') as f:
+                    await f.write(f'{self.twitter_client.auth_token}:{account_username}\n')
                 return True
 
         await self.subscribe_account(target_username=account_username)
