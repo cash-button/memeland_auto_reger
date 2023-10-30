@@ -9,7 +9,7 @@ import asyncio
 
 import config
 from core import start_reger_wrapper
-from twitter_core import start_subs
+from twitter_core import start_subs, start_gms
 from utils import format_range, logger, validate_token, windowname
 
 if platform == "windows":
@@ -35,12 +35,13 @@ if __name__ == '__main__':
 
     cycled_proxies_list = itertools.cycle(proxies_list) if proxies_list else None
 
-    logger.info(f'Загружено {len(accounts_list)} аккаунтов / {len(proxies_list)} '
+    logger.info(f'Загружено {len(accounts_list)} твиттеров / {len(proxies_list)} '
                 f'прокси / {len(private_keys_list)} приват-кеев')
 
     user_action: int = int(input('\n1. Запуск накрутки MEMELand\n'
                                  '2. Подписка между аккаунтами Twitter\n'
                                  '3. Проверка Twitter аккаунтов в MEME\n'
+                                 '4. Коммент GM в Twitter\'e MEME\n'
                                  '\n\tВведите ваше действие: '))
 
     threads: int = 1 if config.CHANGE_PROXY_URL else int(input('\tThreads: '))
@@ -94,6 +95,19 @@ if __name__ == '__main__':
 
             with Pool(processes=threads) as executor:
                 executor.map(start_subs, formatted_accounts_list)
+
+        case 4:
+            print()
+            formatted_accounts_list: list = [
+                {
+                    'account_token': current_account,
+                    'account_proxy': next(cycled_proxies_list) if cycled_proxies_list else None,
+                    'window_name': window_name
+                } for current_account in accounts_list
+            ]
+
+            with Pool(processes=threads) as executor:
+                executor.map(start_gms, formatted_accounts_list)
 
     logger.success('Работа успешно завершена')
     input('\nPress Enter To Exit..')

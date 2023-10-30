@@ -1,7 +1,7 @@
 import asyncio
 from time import sleep
 from copy import deepcopy
-from random import randint
+from random import randint, choice
 from sys import platform
 
 import aiohttp
@@ -76,8 +76,9 @@ class StartSubs:
                 raise better_automation.twitter.errors.Forbidden(error.response)
 
     async def subscribe_account(self,
-                                target_username: str) -> None:
-        i: int = 0
+                                target_username: str,
+                                subs_count: int) -> None:
+        i: int = subs_count
         local_accounts_list: list = deepcopy(self.account_list)
 
         while i < self.subs_count:
@@ -192,12 +193,56 @@ class StartSubs:
                     await f.write(f'{self.twitter_client.auth_token}:{account_username}\n')
                 return True
 
-        await self.subscribe_account(target_username=account_username)
+        await self.subscribe_account(target_username=account_username, subs_count=subs_count)
+
+
+class StartGms:
+    def __init__(self,
+                 account_data: dict):
+        self.twitter_client: better_automation.twitter.api.TwitterAPI | None = None
+
+        account_data['window_name'].update_accs()
+        self.account_token: str = account_data['account_token']
+        self.account_proxy = account_data['account_proxy']
+
+    async def start_gms(self):
+        async with aiohttp.ClientSession(
+                connector=await get_connector(
+                    proxy=self.account_proxy) if self.account_proxy else await get_connector(
+                    proxy=None)) as aiohttp_twitter_session:
+
+
+            self.twitter_client: better_automation.twitter.api.TwitterAPI = TwitterAPI(
+                session=aiohttp_twitter_session,
+                auth_token=self.account_token)
+
+            if not self.twitter_client.ct0:
+                self.twitter_client.set_ct0(await self.twitter_client._request_ct0())
+
+            gm = choice(['GM', 'Gm', 'gm'])
+
+            gm_response = await self.twitter_client.reply(self, tweet_id='1718788079413244315', text=gm)
+            logger.debug(f'{self.account_token} | gm_response: {gm_response}')
+
+            async with aiofiles.open('result/success_gms.txt', 'a', encoding='utf-8-sig') as f:
+                await f.write(f'{self.twitter_client.auth_token}\n')
+
+            sleep(randint(5,20))
+            return True
+
 
 
 def start_subs(account_data: dict) -> None:
     try:
         asyncio.run(StartSubs(account_data=account_data).start_subs())
+
+    except Exception as error:
+        logger.error(f'{account_data["target_account_token"]} | Неизвестная ошибка при обработке аккаунта: {error}')
+
+
+def start_gms(account_data: dict) -> None:
+    try:
+        asyncio.run(StartGms(account_data=account_data).start_gms())
 
     except Exception as error:
         logger.error(f'{account_data["target_account_token"]} | Неизвестная ошибка при обработке аккаунта: {error}')
