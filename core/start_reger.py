@@ -54,6 +54,15 @@ class Reger:
 
         return r.json()
 
+    def get_info(self) -> dict:
+        r = self.meme_client.get(url='https://memefarm-api.memecoin.org/user/info',
+                                 headers={
+                                     **self.meme_client.headers,
+                                     'content-type': None
+                                 })
+
+        return r.json()
+
     def get_twitter_account_names(self) -> tuple[str, str]:
         r = self.meme_client.get(url='https://memefarm-api.memecoin.org/user/info',
                                  headers={
@@ -644,11 +653,15 @@ class Reger:
 
     async def all_tasks_done(self):
         tasks_dict = self.get_tasks()
+        info_dict = self.get_info()
+
+        wallet = info_dict['wallet']
+        inviteCode = info_dict['inviteCode']
         points = tasks_dict['points']['current']
 
         logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
         async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
-            await f.write(f'{self.account_token}:{self.account_private_key}:{points}\n')
+            await f.write(f'{self.account_token}:{self.account_private_key}:{wallet}:{points}:{inviteCode}\n')
 
 
 
