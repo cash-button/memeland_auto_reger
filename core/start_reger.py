@@ -435,9 +435,17 @@ class Reger:
                         return False
 
                     if self.user_action == 3:
-                        logger.success(f'{self.account_token} | Token Valid')
+                        tasks_dict = self.get_tasks()
+                        for task in tasks_dict['tasks']:
+                            if task['id'] == 'linkWallet':
+                                if task['completed']:
+                                    adv_text = ':WALLET_ALREADY_CONNECTED'
+                                    logger.warning(f'{self.account_token} | Token Valid But Wallet Already Connected!!!')
+                                else:
+                                    logger.success(f'{self.account_token} | Token Valid')
+                                    adv_text = ''
                         async with aiofiles.open('result/stat_working_twitters.txt', mode='a+', encoding='utf-8-sig') as f:
-                            await f.write(f'{self.account_token}\n')
+                            await f.write(f'{self.account_token}{adv_text}\n')
                         return True
 
                     self.meme_client.headers.update({
