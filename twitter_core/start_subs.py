@@ -205,12 +205,58 @@ class StartGms:
         self.account_token: str = account_data['account_token']
         self.account_proxy = account_data['account_proxy']
 
+
+    async def get_account_username(self) -> str:
+        while True:
+            try:
+                account_username: str = await self.twitter_client.request_username()
+
+            except better_automation.twitter.errors.Forbidden as error:
+                if 326 in error.api_codes:
+                    logger.info(f'{self.account_token} | Обнаружена капча на аккаунте, пробую решить')
+
+                    SolveCaptcha(auth_token=self.twitter_client.auth_token,
+                                 ct0=self.twitter_client.ct0).solve_captcha(
+                        proxy=Proxy.from_str(
+                            proxy=self.account_proxy).as_url if self.account_proxy else None)
+                    continue
+
+                raise better_automation.twitter.errors.Forbidden(error.response)
+
+            else:
+                return account_username
+
+    async def send_reply(self):
+        while True:
+            try:
+                gm_response = await self.twitter_client.reply(tweet_id='1718788079413244315', text=choice(['GM', 'Gm', 'gm']))
+            except better_automation.twitter.errors.Forbidden as error:
+                if 326 in error.api_codes:
+                    logger.info(f'{self.account_token} | Обнаружена капча на аккаунте, пробую решить')
+
+                    SolveCaptcha(auth_token=self.twitter_client.auth_token,
+                                 ct0=self.twitter_client.ct0).solve_captcha(
+                        proxy=Proxy.from_str(
+                            proxy=self.account_proxy).as_url if self.account_proxy else None)
+                    continue
+
+                raise better_automation.twitter.errors.HTTP(error.response)
+
+            except better_automation.twitter.errors.HTTPException as error:
+                if 187 in error.api_codes:
+                    logger.success(f'{self.account_token} | Пост с GM уже сделан!')
+                    return 'already_did_post'
+
+                raise better_automation.twitter.errors.Forbidden(error.response)
+
+            else:
+                return gm_response
+
     async def start_gms(self):
         async with aiohttp.ClientSession(
                 connector=await get_connector(
                     proxy=self.account_proxy) if self.account_proxy else await get_connector(
                     proxy=None)) as aiohttp_twitter_session:
-
 
             self.twitter_client: better_automation.twitter.api.TwitterAPI = TwitterAPI(
                 session=aiohttp_twitter_session,
@@ -219,15 +265,19 @@ class StartGms:
             if not self.twitter_client.ct0:
                 self.twitter_client.set_ct0(await self.twitter_client._request_ct0())
 
-            gm = choice(['GM', 'Gm', 'gm'])
-
-            gm_response = await self.twitter_client.reply(self, tweet_id='1718788079413244315', text=gm)
-            logger.debug(f'{self.account_token} | gm_response: {gm_response}')
+            gm_response = await self.send_reply()
+            if gm_response.isdigit():
+                twitter_name = await self.get_account_username()
+                twitter_link = f'https://twitter.com/{twitter_name}/status/{gm_response}'
+                logger.success(f'{self.account_token} | Удачно написал GM в твиттер!')
+            else:
+                twitter_link = gm_response
 
             async with aiofiles.open('result/success_gms.txt', 'a', encoding='utf-8-sig') as f:
-                await f.write(f'{self.twitter_client.auth_token}\n')
+                await f.write(f'{self.twitter_client.auth_token}:{twitter_link}\n')
 
-            sleep(randint(5,20))
+            if gm_response != 'already_did_post':
+                sleep(randint(config.SLEEP_BETWEEN_REPLIES[0], config.SLEEP_BETWEEN_REPLIES[1]))
             return True
 
 
@@ -245,4 +295,4 @@ def start_gms(account_data: dict) -> None:
         asyncio.run(StartGms(account_data=account_data).start_gms())
 
     except Exception as error:
-        logger.error(f'{account_data["target_account_token"]} | Неизвестная ошибка при обработке аккаунта: {error}')
+        logger.error(f'{account_data["account_token"]} | Неизвестная ошибка при обработке аккаунта: {error}')

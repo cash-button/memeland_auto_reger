@@ -6,6 +6,7 @@ from sys import platform
 from sys import exit
 import itertools
 import asyncio
+import os
 
 import config
 from core import start_reger_wrapper
@@ -18,6 +19,7 @@ if platform == "windows":
 if __name__ == '__main__':
 
     filterwarnings("ignore")
+    if not os.path.isdir('result'): os.mkdir('result')
 
     with open('accounts.txt', 'r', encoding='utf-8-sig') as file:
         accounts_list: list[str] = [validate_token(input_string=row.strip()) for row in file]
