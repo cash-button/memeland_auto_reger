@@ -3,6 +3,7 @@ from time import sleep
 from copy import deepcopy
 from random import randint, choice
 from sys import platform
+import requests
 
 import aiohttp
 import aiofiles
@@ -292,6 +293,15 @@ def start_subs(account_data: dict) -> None:
 
 def start_gms(account_data: dict) -> None:
     try:
+        if config.CHANGE_PROXY_URL:
+            r = requests.get(config.CHANGE_PROXY_URL)
+            logger.info(f'{account_data["account_token"]} | Успешно сменил Proxy, статус: {r.status_code}')
+
+            if config.SLEEP_AFTER_PROXY_CHANGING:
+                logger.info(
+                    f'{account_data["account_token"]} | Сплю {config.SLEEP_AFTER_PROXY_CHANGING} сек. после смены Proxy')
+                sleep(config.SLEEP_AFTER_PROXY_CHANGING)
+
         asyncio.run(StartGms(account_data=account_data).start_gms())
 
     except Exception as error:
