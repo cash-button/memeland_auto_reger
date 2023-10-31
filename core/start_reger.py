@@ -565,7 +565,7 @@ class Reger:
                                         logger.error(
                                             f'{self.account_token} | Не удалось ввести реф.код, статус: {r.status_code}')
 
-                                case 'followMemeland' | 'followMemecoin' | 'follow9gagceo' | 'followGMShowofficial':
+                                case 'followMemeland' | 'followMemecoin' | 'follow9gagceo' | 'followGMShowofficial' | 'follow0xChar':
                                     follow_result, response_text = await self.follow_quest(
                                         username=current_task['id'].replace('follow', ''),
                                         follow_id=current_task['id'])
@@ -602,6 +602,33 @@ class Reger:
                                     if share_message_result:
                                         logger.success(
                                             f'{self.account_token} | Успешно получил бонус за твит Binance')
+
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
+
+                                    else:
+                                        logger.error(
+                                            f'{self.account_token} | Не удалось создать твит, статус: {response_status}')
+
+                                case 'whatBearMarket':
+                                    share_message_result, response_text, response_status = await self.share_message(
+                                        share_message='AHOY! $MEME (@MEMECOIN) IS GOING TO @BINANCE! 🙌\n\nThis is not a '
+                                                      'drill! This is not fake news! This is happening!\n\n$MEME is the '
+                                                      '39th (not 69th) project on Binance Launchpool! You only have 7 days!'
+                                                      ' Come join the farming with your fellow Binancians!\n\n👇 '
+                                                      'https://www.binance.com/en/support/announcement/'
+                                                      '90ccca2c5d6946ef9439dae41a517578',
+                                        verify_url='https://memefarm-api.memecoin.org/user/verify/daily-task/whatBearMarket', task_name='BearMarket')
+
+                                    if share_message_result:
+                                        logger.success(
+                                            f'{self.account_token} | Успешно получил бонус за твит BearMarket')
 
                                         if config.SLEEP_BETWEEN_TASKS and current_task != \
                                                 (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
