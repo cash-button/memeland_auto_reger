@@ -669,7 +669,7 @@ class Reger:
 
         logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
         async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
-            await f.write(f'{self.account_token}:{self.account_private_key}:{wallet}:{points}:{inviteCode}\n')
+            await f.write(f'{self.account_token}:{self.account_private_key}:{points}:{inviteCode}:{wallet}\n')
 
 
 
