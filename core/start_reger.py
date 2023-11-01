@@ -108,7 +108,7 @@ class Reger:
                                'Never gonna run around and desert you\n' \
                                'Never gonna make you cry\n' \
                                'Never gonna say goodbye\n' \
-                               'Never gonna tell a lie and hurt you", "\n\n' \
+                               'Never gonna tell a lie and hurt you\n\n' \
                                f'Wallet: {account.address[:5]}...{account.address[-4:]}\n' \
                                f'X account: @{twitter_username}'
 
