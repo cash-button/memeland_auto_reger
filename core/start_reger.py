@@ -234,7 +234,9 @@ class Reger:
         return r.json()['status'] == 'success', r.text
 
     async def get_oauth_auth_tokens(self) -> tuple[str | None, str | None, str | None, str, int]:
+        retries = 0
         while True:
+            retries += 1
             headers: dict = self.twitter_client._headers
 
             if headers.get('content-type'):
@@ -285,9 +287,13 @@ class Reger:
             })
 
             if not auth_token_html or not oauth_token_html:
-                logger.warning(f'{self.account_token} | Не удалось обнаружить Auth/OAuth Token на странице, '
-                             f'пробую еще раз, статус: {r[0].status}')
-                continue
+                if retries < 5:
+                    logger.warning(f'{self.account_token} | Не удалось обнаружить Auth/OAuth Token на странице, '
+                                 f'пробую еще раз, статус: {r[0].status}')
+                    continue
+                else:
+                    logger.error(f'{self.account_token} | Не существует Auth/OAuth Token на странице.')
+                    return None, None, None, await r[0].text(), r[0].status
 
             auth_token: str = auth_token_html.get('value', '')
             oauth_token: str = oauth_token_html.get('value', '')
