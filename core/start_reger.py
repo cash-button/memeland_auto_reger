@@ -233,6 +233,14 @@ class Reger:
 
         return r.json()['status'] == 'success', r.text
 
+
+    async def binance_ama(self, code: str):
+        r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/claim-task/binanceAMA',
+                                  json={"code": str(code)})
+
+        return r.json()['status'] == 'success', r.text
+
+
     async def get_oauth_auth_tokens(self) -> tuple[str | None, str | None, str | None, str, int]:
         retries = 0
         while True:
@@ -670,6 +678,25 @@ class Reger:
                                     else:
                                         logger.error(
                                             f'{self.account_token} | Не удалось получить бонус за Coingecko, статус: {response_status}')
+
+                                case 'binanceAMA':
+                                    response_result, response_text = await self.binance_ama(code="community company")
+
+                                    if response_result:
+                                        logger.success(f'{self.account_token} | Успешно получил бонус за Binance AMA')
+
+                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
+                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
+                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
+                                                                              return_randint=True)
+                                            logger.info(
+                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
+                                                f'выполнением следующего таска')
+                                            await asyncio.sleep(delay=time_to_sleep)
+
+                                    else:
+                                        logger.error(f'{self.account_token} | Не удалось получить бонус за Binance AMA: {response_text}')
+
 
                     await self.all_tasks_done()
                     return True
