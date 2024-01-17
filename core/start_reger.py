@@ -37,8 +37,6 @@ class Reger:
         source_data['window_name'].update_accs()
         self.account_token: str = source_data['account_token']
         self.account_proxy: str | None = source_data['account_proxy']
-        self.account_private_key: str | None = source_data['account_private_key']
-        self.user_action: int = source_data['user_action']
 
         self.twitter_client: better_automation.twitter.api.TwitterAPI | None = None
         self.meme_client: tls_client.sessions.Session | None = None
@@ -444,30 +442,9 @@ class Reger:
 
                         return False
 
-                    if self.user_action == 3:
-                        tasks_dict = self.get_tasks()
-                        for task in tasks_dict['tasks']:
-                            if task['id'] == 'linkWallet':
-                                if task['completed']:
-                                    adv_text = ':WALLET_ALREADY_CONNECTED'
-                                    logger.warning(f'{self.account_token} | Token Valid But Wallet Already Connected!!!')
-                                else:
-                                    logger.success(f'{self.account_token} | Token Valid')
-                                    adv_text = ''
-                        async with aiofiles.open('result/stat_working_twitters.txt', mode='a+', encoding='utf-8-sig') as f:
-                            await f.write(f'{self.account_token}{adv_text}\n')
-                        return True
-
                     self.meme_client.headers.update({
                         'authorization': f'Bearer {access_token}'
                     })
-
-                    if not self.account_private_key:
-                        account: eth_account.signers.local.LocalAccount = generate_eth_account()
-
-                    else:
-                        account: eth_account.signers.local.LocalAccount = get_account(
-                            private_key=self.account_private_key)
 
                     tasks_dict: dict = self.get_tasks()
                     twitter_username, twitter_account_name = self.get_twitter_account_names()
@@ -482,32 +459,6 @@ class Reger:
                             match current_task['id']:
                                 case 'connect':
                                     continue
-
-                                case 'linkWallet':
-                                    link_wallet_result, response_text, response_status = self.link_wallet(account=account,
-                                                                                                          twitter_username=twitter_username)
-
-                                    if link_wallet_result:
-                                        logger.success(f'{self.account_token} | Успешно привязал кошелек')
-
-                                        async with aiofiles.open(file='registered.txt', mode='a',
-                                                                 encoding='utf-8-sig') as f:
-                                            await f.write(
-                                                f'{self.account_token};{self.account_proxy if self.account_proxy else ""};'
-                                                f'{account.key.hex()}\n')
-
-                                        if config.SLEEP_BETWEEN_TASKS and current_task != \
-                                                (tasks_dict['tasks'] + tasks_dict['timely'])[-1]:
-                                            time_to_sleep: int = format_range(value=config.SLEEP_BETWEEN_TASKS,
-                                                                              return_randint=True)
-                                            logger.info(
-                                                f'{self.account_token} | Сплю {time_to_sleep} сек. перед '
-                                                f'выполнением следующего таска')
-                                            await asyncio.sleep(delay=time_to_sleep)
-
-                                    else:
-                                        logger.error(
-                                            f'{self.account_token} | Не удалось привязать кошелек, статус: {response_status}')
 
                                 case 'twitterName':
                                     twitter_username_result, response_text, response_status = await self.twitter_name(
@@ -747,15 +698,24 @@ class Reger:
 
         logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
         async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
-            await f.write(f'{self.account_token}:{self.account_private_key}:{points}:{inviteCode}:{wallet}\n')
+            await f.write(f'{self.account_token}:{points}:{inviteCode}:{wallet}\n')
 
 
 
 def start_reger_wrapper(source_data: dict) -> bool:
     try:
         if config.CHANGE_PROXY_URL:
-            r = requests.get(config.CHANGE_PROXY_URL)
-            logger.info(f'{source_data["account_token"]} | Успешно сменил Proxy, статус: {r.status_code}')
+            while True:
+                r = requests.get(config.CHANGE_PROXY_URL)
+                if 'mobileproxy' in config.CHANGE_PROXY_URL and r.json().get('status') == 'OK':
+                    break
+                elif not 'mobileproxy' in config.CHANGE_PROXY_URL and r.status_code == 200:
+                    logger.info(f'{source_data["account_token"]} | Успешно сменил Proxy: {r.text[:100]}')
+                    break
+                else:
+                    logger.error(
+                        f'{source_data["account_token"]} | Proxy Change IP error: {r.text} | {r.status_code} {r.reason}')
+                    sleep(10)
 
             if config.SLEEP_AFTER_PROXY_CHANGING:
                 logger.info(

@@ -31,14 +31,12 @@ def create_task() -> tuple[int | bool, str]:
 
 def get_task_result(task_id: int | str) -> tuple[bool, str]:
     while True:
-        r = requests.get(url='https://api.1stcaptcha.com/getresult',
-                         params={
-                             'apikey': config.FIRSTCAPTCHA_API_KEY,
-                             'taskId': task_id
-                         })
+        r = requests.get(url='https://api.1stcaptcha.com/getresult', params={
+            'apikey': config.FIRSTCAPTCHA_API_KEY,
+            'taskId': task_id
+        })
 
-        if r.json()['Status'] in ['PENDING',
-                                  'PROCESSING']:
+        if r.json()['Status'] in ['PENDING', 'PROCESSING']:
             continue
 
         elif r.json()['Status'] == 'SUCCESS':
@@ -49,21 +47,17 @@ def get_task_result(task_id: int | str) -> tuple[bool, str]:
 
 
 class SolveCaptcha:
-    def __init__(self,
-                 auth_token: str,
-                 ct0: str):
+    def __init__(self, auth_token: str, ct0: str):
         self.auth_token: str = auth_token
         self.ct0: str = ct0
 
-    def interceptor(self,
-                    request):
+    def interceptor(self, request):
         del request.twitter_headers['cookie']
         request.twitter_headers['cookie'] = f'auth_token=' + self.auth_token + '; ct0=' + self.ct0
         del request.twitter_headers['x-csrf-token']
         request.twitter_headers['x-csrf-token'] = self.ct0
 
-    def solve_captcha(self,
-                      proxy: str | None) -> None:
+    def solve_captcha(self, proxy: str | None) -> None:
         driver = None
         try:
             captcha_result: str = ''
@@ -72,8 +66,7 @@ class SolveCaptcha:
                 task_id, response_text = create_task()
 
                 if not task_id:
-                    logger.error(
-                        f'{self.auth_token} | Ошибка при создании Task на решение капчи, ответ: {response_text}')
+                    logger.error(f'{self.auth_token} | Ошибка при создании Task на решение капчи, ответ: {response_text}')
                     continue
 
                 task_result, response_text = get_task_result(task_id=task_id)

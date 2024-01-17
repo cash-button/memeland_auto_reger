@@ -278,7 +278,7 @@ class StartGms:
                 await f.write(f'{self.twitter_client.auth_token}:{twitter_link}\n')
 
             if gm_response != 'already_did_post':
-                sleep(randint(config.SLEEP_BETWEEN_REPLIES[0], config.SLEEP_BETWEEN_REPLIES[1]))
+                sleep(randint(5, 20))
             return True
 
 
