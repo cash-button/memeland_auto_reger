@@ -3,6 +3,7 @@ from random import choice
 from sys import platform
 from time import sleep
 from urllib.parse import urlparse, parse_qs
+from pyuseragents import random as random_ua
 
 import aiofiles
 import aiohttp
@@ -396,12 +397,7 @@ class Reger:
                             'chrome112'
                         ]))
                         self.meme_client.headers.update({
-                            'user-agent': choice([
-                                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                                'Chrome/112.0.0.0 Safari/537.36',
-                                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                                'Chrome/116.0.5845.962 YaBrowser/23.9.1.962 Yowser/2.5 Safari/537.36'
-                            ]),
+                            'user-agent': random_ua(),
                             'accept': 'application/json',
                             'accept-language': 'ru,en;q=0.9,vi;q=0.8,es;q=0.7,cy;q=0.6',
                             'content-type': 'application/json',
@@ -480,8 +476,8 @@ class Reger:
                     if len(all_tasks) - sum([current_task['completed'] for current_task in all_tasks]) != 0:
 
                         for current_task in tasks_dict['tasks'] + tasks_dict['timely']:
-                            if current_task['completed']:
-                                continue
+                            if current_task['id'] != "followStakeland": continue
+                            if current_task['completed']: continue
 
                             match current_task['id']:
                                 case 'connect':
@@ -579,7 +575,7 @@ class Reger:
                                         logger.error(
                                             f'{self.account_token} | Не удалось ввести реф.код, статус: {r.status_code}')
 
-                                case 'followMemeland' | 'followMemecoin' | 'follow9gagceo' | 'followGMShowofficial' | 'follow0xChar':
+                                case 'followMemeland' | 'followMemecoin' | 'follow9gagceo' | 'followGMShowofficial' | 'follow0xChar' | 'followStakeland':
                                     follow_result, response_text = await self.follow_quest(
                                         username=current_task['id'].replace('follow', ''),
                                         follow_id=current_task['id'])
