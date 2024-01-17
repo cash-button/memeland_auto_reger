@@ -17,31 +17,33 @@ if platform == "windows":
 
 
 def create_task() -> tuple[int | bool, str]:
-    r = requests.get(url='https://api.1stcaptcha.com/funcaptchatokentask',
+    payload = {
+        'clientKey': config.ANTICAPTCHA_API_KEY,
+        "task": {
+                "type": "FunCaptchaTaskProxyless",
+                "websiteURL": 'https://twitter.com/account/access',
+                "websitePublicKey": "0152B4EB-D2DC-460A-89A1-629838B529C9"
+        },
+        "languagePool": "en"
+    }
+    r = requests.post('https://api.anti-captcha.com/createTask', json=payload)
 
-                     params={
-                         'apikey': config.FIRSTCAPTCHA_API_KEY,
-                         'sitekey': config.SITE_KEY,
-                         'siteurl': config.SITE_URL,
-                         'affiliateid': 33060
-                     })
-
-    return r.json()['TaskId'] if r.json()['Code'] == 0 else False, r.text
+    return r.json()
 
 
 def get_task_result(task_id: int | str) -> tuple[bool, str]:
+    payload = {
+        "clientKey": config.ANTICAPTCHA_API_KEY,
+        "taskId": task_id
+    }
     while True:
-        r = requests.get(url='https://api.1stcaptcha.com/getresult', params={
-            'apikey': config.FIRSTCAPTCHA_API_KEY,
-            'taskId': task_id
-        })
+        r = requests.get('https://api.anti-captcha.com/getTaskResult', json=payload)
 
-        if r.json()['Status'] in ['PENDING', 'PROCESSING']:
-            continue
+        if r.json()['status'] in ['pending', 'processing']:
+            sleep(3)
 
-        elif r.json()['Status'] == 'SUCCESS':
-            return True, r.json()['Data']['Token']
-
+        elif r.json()['status'] == 'ready':
+            return True, r.json()['solution']['token']
         else:
             return False, r.text
 
@@ -63,19 +65,20 @@ class SolveCaptcha:
             captcha_result: str = ''
 
             while True:
-                task_id, response_text = create_task()
+                captcha_response = create_task()
 
-                if not task_id:
-                    logger.error(f'{self.auth_token} | Ошибка при создании Task на решение капчи, ответ: {response_text}')
+                if captcha_response['errorId'] != 0:
+                    logger.error(f'{self.auth_token} | Ошибка при создании Task на решение капчи, ответ: {captcha_response}')
                     continue
+                else:
+                    logger.debug(f'{self.auth_token} | Ожидаю решения капчи...')
 
-                task_result, response_text = get_task_result(task_id=task_id)
+                task_result, captcha_result = get_task_result(task_id=captcha_response["taskId"])
 
                 if not task_result:
-                    logger.error(f'{self.auth_token} | Ошибка при решении капчи, ответ: {response_text}')
+                    logger.error(f'{self.auth_token} | Ошибка при решении капчи, ответ: {captcha_result}')
                     continue
 
-                captcha_result: str = response_text
                 logger.info(f'{self.auth_token} | Решение капчи получено, пробую отправить')
                 break
 

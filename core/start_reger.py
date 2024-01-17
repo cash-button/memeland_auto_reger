@@ -207,7 +207,7 @@ class Reger:
         while True:
             r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/verify/invite-code',
                                       json={
-                                          'code': config.REF_CODE
+                                          'code': 'captainz#5056'
                                       })
 
             if r.json()['status'] == 'verification_failed':

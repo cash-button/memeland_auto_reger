@@ -1,9 +1,6 @@
 from multiprocessing.dummy import Pool
 from warnings import filterwarnings
-from random import randint
-from copy import deepcopy
 from sys import platform
-from sys import exit
 import itertools
 import asyncio
 import os
@@ -12,8 +9,12 @@ import config
 from core import start_reger_wrapper
 from utils import logger, validate_token, windowname
 
+from core.solve_captcha import create_task, get_task_result
+
+
 if platform == "windows":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 if __name__ == '__main__':
 
@@ -35,6 +36,7 @@ if __name__ == '__main__':
     logger.info(f'Загружено {len(accounts_list)} твиттеров / {len(proxies_list)} прокси')
 
     threads: int = 1 if config.CHANGE_PROXY_URL else int(input('\tThreads: '))
+
     input(' > Start')
     print()
 
