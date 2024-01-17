@@ -39,13 +39,19 @@ def get_task_result(task_id: int | str) -> tuple[bool, str]:
     while True:
         r = requests.get('https://api.anti-captcha.com/getTaskResult', json=payload)
 
-        if r.json()['status'] in ['pending', 'processing']:
-            sleep(3)
+        try:
+            if r.json().get('status') in ['pending', 'processing']:
+                sleep(3)
 
-        elif r.json()['status'] == 'ready':
-            return True, r.json()['solution']['token']
-        else:
-            return False, r.text
+            elif r.json().get('status') == 'ready':
+                return True, r.json()['solution']['token']
+            else:
+                return False, r.text
+        except Exception as err:
+            try: text = '\n' + r.text
+            except Exception: text = ''
+            logger.warning(f'Не могу получить решение капчи: {err} {text}')
+            sleep(3)
 
 
 class SolveCaptcha:
