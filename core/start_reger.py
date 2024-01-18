@@ -62,6 +62,16 @@ class Reger:
 
         return r.json()
 
+
+    def seen(self) -> dict:
+        r = self.meme_client.post(url='https://memefarm-api.memecoin.org/user/points/seen',
+                                 headers={
+                                     **self.meme_client.headers,
+                                     'content-type': None
+                                 })
+
+        return r.json()
+
     def get_twitter_account_names(self) -> tuple[str, str]:
         r = self.meme_client.get(url='https://memefarm-api.memecoin.org/user/info',
                                  headers={
@@ -691,14 +701,21 @@ class Reger:
     async def all_tasks_done(self):
         tasks_dict = self.get_tasks()
         info_dict = self.get_info()
+        seen_dict = self.seen()
 
         wallet = info_dict['wallet']
         inviteCode = info_dict['inviteCode']
-        points = tasks_dict['points']['current']
+        
+        tasks_points = tasks_dict['points']['current']
+        seen_points = seen_dict['points']['current']
+        points = max(seen_points, tasks_points)
 
-        logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
-        async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
-            await f.write(f'{self.account_token}:{points}:{inviteCode}:{wallet}\n')
+        if tasks_dict["tasks"][-1]['id'] == 'followStakeland' and tasks_dict["tasks"][-1]["completed"] == False:
+            logger.error(f'{self.account_token} | Выполнены не все задания. {points} Поинтов')
+        else:
+            logger.info(f'{self.account_token} | Все задания успешно выполнены | {points} Поинтов')
+            async with aiofiles.open(file='result/success_accs.txt', mode='a+', encoding='utf-8-sig') as f:
+                await f.write(f'{self.account_token}:{points}:{inviteCode}:{wallet}\n')
 
 
 
